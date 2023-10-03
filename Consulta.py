@@ -105,22 +105,31 @@ class Consulta:
                 raise e
 
 
-    def buscar_dados(self, co_uuid, tabela):
+    def buscar_dados(self, uuids, tabela):
         """
-        Consulta e retorna dados de uma tabela a partir do co_uuid.
+        Consulta e retorna dados de uma tabela a partir de uma lista de UUIDs.
 
         Args:
-            co_uuid (str): O co_uuid a ser usado como filtro na consulta.
-            tabela (Type[Base]): A tabela da qual os dados devem ser consultados.
+            uuids (list[str]): Uma lista de UUIDs a ser usada como filtro na consulta.
+            tabela (Type[Base]): A classe de modelo da tabela da qual os dados devem ser consultados.
 
         Returns:
-            dict: Um dicionário com os dados da consulta ou None se nenhum dado for encontrado.
+            list[dict]: Uma lista de dicionários contendo os dados da consulta para cada UUID na lista.
+                Se nenhum dado for encontrado para um UUID específico, o valor correspondente será None.
+                
+        Raises:
+            SQLAlchemyError: Se ocorrer um erro durante a consulta ao banco de dados.
         """
         with self.Session as session:
             try:
-                consulta = session.query(tabela).filter(tabela.co_uuid == co_uuid)
-
-                return self.converte_dicionario(consulta.first(), tabela) if consulta.count() > 0 else None
+                resultados = []
+                for uuid in uuids:
+                    consulta = session.query(tabela).filter(tabela.co_uuid == uuid)
+                    if consulta.count() > 0:
+                        resultados.append(self.converte_dicionario(consulta.first(), tabela))
+                    else:
+                        resultados.append(None)
+                return resultados
 
             except SQLAlchemyError as e:
                 self._fechar_sessao()

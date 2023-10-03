@@ -1,6 +1,7 @@
 from Consulta import Consulta
 from conexao import engine
 from database import Pessoa
+from Consistencia import Consistencia
 
 from sqlalchemy.orm import Session
 
@@ -16,3 +17,9 @@ for dado in dados_duplicados:
     lista_uuids.append(consultas.buscar_couuids(dado))
 
 # Criar instância da classe Consistência
+consistencia = Consistencia()
+
+# Loop dos uuids para consistência e escolha de dados para exclução
+for uuids in lista_uuids:
+    # Buscar dados da tb_pessoa
+    dados_pessoa = consultas.buscar_dados(uuids, Pessoa)
