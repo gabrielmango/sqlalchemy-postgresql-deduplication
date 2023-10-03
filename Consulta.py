@@ -1,15 +1,14 @@
-from Conexao import engine
 from database import Documento, Caso
 
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
-
-from pprint import pprint
 
 class Consulta:
     """
-    Classe responsável por realizar consultas na base de dados.
+    Realiza consultas na base de dados usando SQLAlchemy.
+
+    Esta classe permite consultar documentos duplicados, buscar dados de uma tabela por co_uuid,
+    encontrar co_uuids associados a um número de documento e muito mais.
 
     Args:
         session (Session): Uma instância de sessão SQLAlchemy para interagir com a base de dados.
@@ -18,22 +17,6 @@ class Consulta:
     Attributes:
         _session (Session): A instância da sessão SQLAlchemy.
         _engine (Engine): A instância do motor SQLAlchemy.
-
-    Methods:
-        converte_dicionario(dados, tabela):
-            Converte os resultados de uma consulta em um dicionário.
-
-        buscar_documentos_duplicados():
-            Consulta e retorna os números de documento duplicados na base de dados.
-
-        buscar_couuids(numero_documento):
-            Consulta e retorna os co_uuid's do número de documento fornecido.
-
-        buscar_dados(co_uuid, tabela):
-            Consulta e retorna dados de uma tabela a partir do co_uuid.
-
-        buscar_casos(codigo_pessoa):
-            Consulta e retorna dados dos casos de uma pessoa.
     """
 
     def __init__(self, session, engine):
@@ -41,15 +24,16 @@ class Consulta:
         Inicializa a classe Consulta."""
         self._engine = engine
         self._session = session
+        self.Session = self._session(self._engine)
 
 
 
     def _fechar_sessao(self):
         """Fecha a sessão de forma segura."""
         try:
-            self._session.close()
+            self.Session.close()
         except SQLAlchemyError as e:
-            self._session.rollback()
+            self.Session.rollback()
             raise e
 
 
@@ -75,10 +59,17 @@ class Consulta:
         """
         Consulta e retorna os números de documento duplicados na base de dados.
 
+        Esta função realiza uma consulta na base de dados para encontrar documentos duplicados do tipo 'IDENTIDADE'.
+
         Returns:
             list: Uma lista de números de documento duplicados.
+
+        Example:
+            consulta = Consulta(session, engine)
+            duplicados = consulta.buscar_documentos_duplicados()
+            print(duplicados)
         """
-        with self._session(self._engine) as session:
+        with self.Session as session:
             try:
                 consulta = session.query(Documento.nu_documento, Documento.tp_documento, func.count().label('count')) \
                     .filter(Documento.tp_documento == 'IDENTIDADE') \
@@ -103,9 +94,9 @@ class Consulta:
         Returns:
             list: Uma lista de co_uuid's associados ao número de documento.
         """
-        with self._session(self._engine) as session:
+        with self.Session as session:
             try:
-                consulta = self._session.query(Documento).filter(Documento.nu_documento == numero_documento)
+                consulta = session.query(Documento).filter(Documento.nu_documento == numero_documento)
 
                 return [dado.co_uuid_2 for dado in consulta.all()]
 
@@ -125,9 +116,9 @@ class Consulta:
         Returns:
             dict: Um dicionário com os dados da consulta ou None se nenhum dado for encontrado.
         """
-        with self._session(self._engine) as session:
+        with self.Session as session:
             try:
-                consulta = self._session.query(tabela).filter(tabela.co_uuid == co_uuid)
+                consulta = session.query(tabela).filter(tabela.co_uuid == co_uuid)
 
                 return self.converte_dicionario(consulta.first(), tabela) if consulta.count() > 0 else None
 
@@ -146,9 +137,9 @@ class Consulta:
         Returns:
             dict: Um dicionário com os dados do primeiro caso encontrado ou None se nenhum caso for encontrado.
         """
-        with self._session(self._engine) as session:
+        with self.Session as session:
             try:
-                consulta = self._session.query(Caso).filter(Caso.co_pessoa == codigo_pessoa)
+                consulta = session.query(Caso).filter(Caso.co_pessoa == codigo_pessoa)
 
                 return self.converte_dicionario(consulta.first(), Caso)
 
