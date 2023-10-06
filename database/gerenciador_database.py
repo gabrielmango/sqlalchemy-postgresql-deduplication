@@ -19,7 +19,6 @@ class GerenciadorBancoDados(ABC):
 
     
     def converter_em_lista_dicionarios(self, dados):
-        resultado = []
         inspector = inspect(self._tabela)
         columas = inspector.columns.keys()
 
@@ -28,10 +27,8 @@ class GerenciadorBancoDados(ABC):
 
             for coluna in columas:
                 dados_dict[coluna] = getattr(dado, coluna)
-            
-            resultado.append(dados_dict)
         
-        return (len(resultado), resultado)
+        return dados_dict
 
 
     def inserir(self, dados):
@@ -81,7 +78,7 @@ class GerenciadorDocumento(GerenciadorBancoDados):
         with self.sessao as session:
             try:
                 consulta = session.query(self._tabela.nu_documento) \
-                    .filter(Documento.tp_documento == 'IDENTIDADE') \
+                    .filter(self._tabela.tp_documento == 'IDENTIDADE') \
                     .group_by(self._tabela.nu_documento, self._tabela.tp_documento) \
                     .having(func.count() > 1) \
                     .order_by(self._tabela.nu_documento)
@@ -94,7 +91,7 @@ class GerenciadorDocumento(GerenciadorBancoDados):
     def buscar_couuids(self, numero_documento: str):
         with self.sessao as session:
             try:
-                consulta = session.query(Documento).filter(Documento.nu_documento == numero_documento)
+                consulta = session.query(self._tabela).filter(self._tabela.nu_documento == numero_documento)
 
                 return [dado.co_uuid_2 for dado in consulta.all()]
 
