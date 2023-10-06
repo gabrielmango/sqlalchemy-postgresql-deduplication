@@ -62,6 +62,9 @@ class Documento(Base):
     co_uuid = Column(String(255), nullable=False)
     co_uuid_1 = Column(String(255))
 
+    def id(self):
+        return self.co_seq_caso.label('id')
+
 
 class Email(Base):
     __tablename__ = 'tb_email'
@@ -80,6 +83,9 @@ class Email(Base):
     co_uuid = Column(String(255))
     co_uuid_1 = Column(String(255))
     tp_email = Column(String(100))
+
+    def id(self):
+        return self.co_seq_caso.label('id')
 
 
 class Endereco(Base):
@@ -106,6 +112,9 @@ class Endereco(Base):
     co_uuid = Column(String(255))
     co_uuid_1 = Column(String(255))
 
+    def id(self):
+        return self.co_seq_caso.label('id')
+
 
 class FiliacaoPessoa(Base):
     __tablename__ = 'tb_filiacao_pessoa'
@@ -124,6 +133,9 @@ class FiliacaoPessoa(Base):
     nu_versao = Column(Numeric(10), nullable=False)
     co_uuid = Column(String(255))
     co_uuid_1 = Column(String(255))
+
+    def id(self):
+        return self.co_seq_caso.label('id')
 
 
 class GeralPessoa(Base):
@@ -160,6 +172,9 @@ class GeralPessoa(Base):
     fl_autoriza_uso_dados_pessoais = Column(Boolean)
     fl_autoriza_notificac_digital = Column(Boolean)
 
+    def id(self):
+        return self.co_seq_caso.label('id')
+
 
 class Pessoa(Base):
     __tablename__ = 'tb_pessoa'
@@ -190,6 +205,9 @@ class Pessoa(Base):
     fl_situacao_rua = Column(Boolean, default=False, nullable=False)
     fl_trajetoria_rua = Column(Boolean, default=False, nullable=False)
 
+    def id(self):
+        return self.co_seq_caso.label('id')
+
 
 class Telefone(Base):
     __tablename__ = 'tb_telefone'
@@ -211,4 +229,5 @@ class Telefone(Base):
     co_uuid = Column(String(255), nullable=False)
     co_uuid_1 = Column(String(255))
 
-
+    def id(self):
+        return self.co_seq_caso.label('id')

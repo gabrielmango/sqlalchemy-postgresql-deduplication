@@ -1,13 +1,15 @@
-from conexao import session
+from conexao import engine
 from modals import *
 
 from abc import ABC
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.inspection import inspect
 
-class GerenciadorBancoDados():
-    def __init__(self):
-        self.sessao = session
+class GerenciadorBancoDados(ABC):
+    def __init__(self, tabela, engine):
+        self.sessao = sessionmaker(bind=engine)
+        self._tabela = tabela
   
     def _fecha_sessao(self):
         try:
@@ -17,9 +19,9 @@ class GerenciadorBancoDados():
             raise e
 
     
-    def converter_em_lista_dicionarios(self, Tabela, dados):
+    def converter_em_lista_dicionarios(self, dados):
         resultado = []
-        inspector = inspect(Tabela)
+        inspector = inspect(self._tabela)
         columas = inspector.columns.keys()
 
         for dado in dados:
@@ -33,10 +35,10 @@ class GerenciadorBancoDados():
         return (len(resultado), resultado)
 
 
-    def inserir(self, Tabela, dados):
+    def inserir(self, dados):
         with self.sessao as sessao:
             try:
-                instancia_tabela = Tabela(**dados)
+                instancia_tabela = self._tabela(**dados)
                 sessao.add(instancia_tabela)
                 sessao.commit()
                 sleep(0.5)
@@ -45,28 +47,56 @@ class GerenciadorBancoDados():
                 raise e
 
 
-    def consultar_por_id(self, Tabela, id):
+    def consultar_por_id(self, id):
         with self.sessao as sessao:
             try:
-                consulta = sessao.query(Tabela).filter(Tabela.id(Tabela) == id)
-                return self.converter_em_lista_dicionarios(Tabela, consulta)
+                consulta = sessao.query(self._tabela).filter(self._tabela.id(self._tabela) == id)
+                return self.converter_em_lista_dicionarios(consulta)
             except SQLAlchemyError as e:
                 self._fecha_sessao()
                 raise e
 
-    def consultar_por_couuid(self, Tabela, couuid):
+
+    def consultar_por_couuid(self, couuid):
         with self.sessao as sessao:
             try:
-                consulta = sessao.query(Tabela).filter(Tabela.co_uuid_2 == couuid)
-                return self.converter_em_lista_dicionarios(Tabela, consulta)
+                consulta = sessao.query(self._tabela).filter(self._tabela.co_uuid_2 == couuid)
+                return self.converter_em_lista_dicionarios(consulta)
             except SQLAlchemyError as e:
                 self._fecha_sessao()
                 raise e
 
-if __name__ == '__main__':
+    
+    def deletar_dado_por_id(self, id):
+        with self.sessao as sessao:
+            try:
+                consulta = sessao.query(self._tabela).filter(self._tabela.id(self._tabela) == id)
+                sessao.delete(consulta)
+                sessao.commit()
+            except SQLAlchemyError as e:
+                self._fecha_sessao()
+                raise e
 
-    from pprint import pprint
+class GerenciadorCaso(GerenciadorBancoDados):
+    pass
 
-    testes = GerenciadorBancoDados()
+class GerenciadorDocumento(GerenciadorBancoDados):
+    pass
 
-    pprint(testes.consultar_por_id(Caso, '38337'))
+class GerenciadorEmail(GerenciadorBancoDados):
+    pass
+
+class GerenciadorEndereco(GerenciadorBancoDados):
+    pass
+
+class GerenciadorFiliacaoPessoa(GerenciadorBancoDados):
+    pass
+
+class GerenciadorGeralPessoa(GerenciadorBancoDados):
+    pass
+
+class GerenciadorPessoa(GerenciadorBancoDados):
+    pass
+
+class GerenciadorTelefone(GerenciadorBancoDados):
+    pass
