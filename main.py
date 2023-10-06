@@ -1,20 +1,18 @@
-from Consulta import Consulta
-from Conexao import engine
-from database import Pessoa
+from processamento import Processamento
 
-from sqlalchemy.orm import Session
 from pprint import pprint
 
+def main():
+    processamento = Processamento()
 
-consultas = Consulta(Session, engine)
+    dados_duplicados = processamento.documentos_duplicados()
 
-dados_duplicados = consultas.buscar_documentos_duplicados()
+    for dado in dados_duplicados:
+        uuids = processamento.buscar_uuid(dado)
 
-for dado in dados_duplicados:
-    pprint(consultas.buscar_couuids(dado))
+        for uuid in uuids:
+            pessoa = processamento.buscar_pessoa(uuid)
 
-# dado = dados_duplicados[0]
 
-# uuids = consultas.buscar_couuids(dado)
-
-# print(uuids)
+if __name__ == '__main__':
+    main()

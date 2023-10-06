@@ -1,6 +1,3 @@
-from database.conexao import engine
-from database.modals import *
-
 from abc import ABC
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,7 +6,8 @@ from sqlalchemy.inspection import inspect
 
 class GerenciadorBancoDados(ABC):
     def __init__(self, tabela, engine):
-        self.sessao = sessionmaker(bind=engine)
+        session = sessionmaker(bind=engine)
+        self.sessao = session()
         self._tabela = tabela
   
     def _fecha_sessao(self):
@@ -58,7 +56,7 @@ class GerenciadorBancoDados(ABC):
                 raise e
 
 
-    def consultar_por_couuid(self, couuid):
+    def consultar_por_couuid_2(self, couuid):
         with self.sessao as sessao:
             try:
                 consulta = sessao.query(self._tabela).filter(self._tabela.co_uuid_2 == couuid)
@@ -80,7 +78,7 @@ class GerenciadorBancoDados(ABC):
 
 class GerenciadorDocumento(GerenciadorBancoDados):
     def buscar_documentos_duplicados(self):
-        with self._session(self._engine) as session:
+        with self.sessao as session:
             try:
                 consulta = session.query(self._tabela.nu_documento) \
                     .filter(Documento.tp_documento == 'IDENTIDADE') \
@@ -91,6 +89,28 @@ class GerenciadorDocumento(GerenciadorBancoDados):
                 return [dado.nu_documento for dado in consulta.all()]
             except SQLAlchemyError as e:
                 self._fechar_sessao()
+                raise e
+    
+    def buscar_couuids(self, numero_documento: str):
+        with self.sessao as session:
+            try:
+                consulta = session.query(Documento).filter(Documento.nu_documento == numero_documento)
+
+                return [dado.co_uuid_2 for dado in consulta.all()]
+
+            except SQLAlchemyError as e:
+                self._fechar_sessao()
+                raise e
+
+
+class GerenciadorPessoa(GerenciadorBancoDados):
+    def consultar_por_couuid(self, couuid):
+        with self.sessao as sessao:
+            try:
+                consulta = sessao.query(self._tabela).filter(self._tabela.co_uuid == couuid)
+                return self.converter_em_lista_dicionarios(consulta)
+            except SQLAlchemyError as e:
+                self._fecha_sessao()
                 raise e
 
 
@@ -113,9 +133,6 @@ class GerenciadorFiliacaoPessoa(GerenciadorBancoDados):
 class GerenciadorGeralPessoa(GerenciadorBancoDados):
     pass
 
-
-class GerenciadorPessoa(GerenciadorBancoDados):
-    pass
 
 class GerenciadorTelefone(GerenciadorBancoDados):
     pass
