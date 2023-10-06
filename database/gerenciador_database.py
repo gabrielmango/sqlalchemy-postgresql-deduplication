@@ -1,7 +1,8 @@
-from conexao import engine
-from modals import *
+from database.conexao import engine
+from database.modals import *
 
 from abc import ABC
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.inspection import inspect
@@ -77,23 +78,41 @@ class GerenciadorBancoDados(ABC):
                 self._fecha_sessao()
                 raise e
 
+class GerenciadorDocumento(GerenciadorBancoDados):
+    def buscar_documentos_duplicados(self):
+        with self._session(self._engine) as session:
+            try:
+                consulta = session.query(self._tabela.nu_documento) \
+                    .filter(Documento.tp_documento == 'IDENTIDADE') \
+                    .group_by(self._tabela.nu_documento, self._tabela.tp_documento) \
+                    .having(func.count() > 1) \
+                    .order_by(self._tabela.nu_documento)
+
+                return [dado.nu_documento for dado in consulta.all()]
+            except SQLAlchemyError as e:
+                self._fechar_sessao()
+                raise e
+
+
 class GerenciadorCaso(GerenciadorBancoDados):
     pass
 
-class GerenciadorDocumento(GerenciadorBancoDados):
-    pass
 
 class GerenciadorEmail(GerenciadorBancoDados):
     pass
 
+
 class GerenciadorEndereco(GerenciadorBancoDados):
     pass
+
 
 class GerenciadorFiliacaoPessoa(GerenciadorBancoDados):
     pass
 
+
 class GerenciadorGeralPessoa(GerenciadorBancoDados):
     pass
+
 
 class GerenciadorPessoa(GerenciadorBancoDados):
     pass
