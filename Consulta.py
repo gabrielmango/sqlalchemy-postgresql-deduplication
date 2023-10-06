@@ -93,7 +93,7 @@ class Consulta:
                 raise e
 
 
-    def buscar_couuids(self, numero_documento):
+    def buscar_couuids(self, numero_documento: str):
         """
         Consulta e retorna os co_uuid's do número de documento fornecido.
 
@@ -105,7 +105,7 @@ class Consulta:
         """
         with self._session(self._engine) as session:
             try:
-                consulta = self._session.query(Documento).filter(Documento.nu_documento == numero_documento)
+                consulta = session.query(Documento).filter(Documento.nu_documento == numero_documento)
 
                 return [dado.co_uuid_2 for dado in consulta.all()]
 
@@ -127,7 +127,7 @@ class Consulta:
         """
         with self._session(self._engine) as session:
             try:
-                consulta = self._session.query(tabela).filter(tabela.co_uuid == co_uuid)
+                consulta = session.query(tabela).filter(tabela.co_uuid == co_uuid)
 
                 return self.converte_dicionario(consulta.first(), tabela) if consulta.count() > 0 else None
 
@@ -148,7 +148,7 @@ class Consulta:
         """
         with self._session(self._engine) as session:
             try:
-                consulta = self._session.query(Caso).filter(Caso.co_pessoa == codigo_pessoa)
+                consulta = session.query(Caso).filter(Caso.co_pessoa == codigo_pessoa)
 
                 return self.converte_dicionario(consulta.first(), Caso)
 

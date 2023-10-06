@@ -1,6 +1,10 @@
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, Numeric, Text, Date
+# Importa classes e tipos de coluna do SQLAlchemy
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, Numeric, Text, DATETIME, Date
+
+# Importa o módulo declarative_base do SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
 
+# Cria uma instância da classe declarative_base para ser usada como base para as classes de mapeamento
 Base = declarative_base()
 
 
@@ -33,6 +37,9 @@ class Caso(Base):
     fl_caso_possui_envolvido = Column(Boolean)
     ds_caso = Column(Text)
     co_caso_replicado = Column(Integer)
+
+    def id(self):
+        return self.co_seq_caso.label('id')
 
 
 class Documento(Base):
